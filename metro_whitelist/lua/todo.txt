@@ -1,0 +1,1 @@
+- Vérifier que la valeur n'existe pas dans les fichiers avant de l'ajouter
