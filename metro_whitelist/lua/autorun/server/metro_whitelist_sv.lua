@@ -53,7 +53,8 @@ function allowedToGetJob(ply, numberTeam, isForced)
 	else -- if there is a whitelist on the job
 		local checkQuery = sql.Query("SELECT * FROM MetroWhitelistCharacters WHERE WhitelistSteamID = '"..ply:SteamID64().."' AND WhitelistCharID = '"..ply:GetNWInt("Metro::CharacterID").."' AND WhitelistJobUID = '"..query[1]["JobUID"].."'")
 		if checkQuery == nil then -- if character is not already whitelisted
-			MMNotification(ply, "You are not whitelisted !", 1, 3)
+			--MMNotification(ply, "You are not whitelisted !", 1, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "You are not whitelisted !", function(callback) MMNotification(ply, callback, 1, 3) end )
 			return false, "Metro Whitelist - Character not whitelisted"
 		else -- if character is whitelisted
 			return true, "Metro Whitelist - Character whitelisted"
@@ -80,17 +81,21 @@ local function addJobToWhitelist(plyAsker, jobToAdd)
 
 		if canAdd then -- If it has never been in the database
 			sql.Query("INSERT INTO MetroWhitelistJob(JobName, JobActive) VALUES('"..jobToAdd.."', 1)")
-			MMNotification(plyAsker, "The job '"..jobToAdd.."' has been added in the database !", 0, 3)
+			--MMNotification(plyAsker, "The job '"..jobToAdd.."' has been added in the database !", 0, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "The job has been added in the database !", function(callback) MMNotification(plyAsker, callback, 0, 3) end )
 		elseif not canAdd and switchActive then -- if it was inactive
 			sql.Query("UPDATE MetroWhitelistJob SET JobActive = 1 WHERE JobName = '"..jobToAdd.."'")
-			MMNotification(plyAsker, "The job '"..jobToAdd.."' has been edited in the database (it has been activated) !", 2, 3)
+			--MMNotification(plyAsker, "The job '"..jobToAdd.."' has been edited in the database (it has been activated) !", 2, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "The job has been added in the database !", function(callback) MMNotification(plyAsker, callback, 2, 3) end )
 		else -- if it's already active
-			MMNotification(plyAsker, "This job '"..jobToAdd.."' is already in the database !", 1, 3)
+			--MMNotification(plyAsker, "This job '"..jobToAdd.."' is already in the database !", 1, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "The job is already in the databse !", function(callback) MMNotification(plyAsker, callback, 1, 3) end )
 		end
 
 	else -- if there is no jobs, no need to check
 		sql.Query("INSERT INTO MetroWhitelistJob(JobName, JobActive) VALUES('"..jobToAdd.."', 1)")
-		MMNotification(plyAsker, "The job ('"..jobToAdd.."') has been added in the database !", 0, 3)
+		--MMNotification(plyAsker, "The job ('"..jobToAdd.."') has been added in the database !", 0, 3)
+		GNLib.AutoTranslate( MConf.LanguageType, "The job has been added in the database !", function(callback) MMNotification(plyAsker, callback, 2, 3) end )
 	end
 end
 
@@ -113,7 +118,8 @@ hook.Add( "PlayerSay", "Metro::WhitelistHook::PlayerSay", function( ply, text )
 		return ""
 	elseif playerInput[1] == MConf.WhitelistCommandDeleteAll then
 		if ply:IsSuperAdmin() then
-			MMNotification(ply, "Everything from the whitelist will be deleted in 3 seconds, and will be followed with a server restart", 2, 3)
+			--MMNotification(ply, "Everything from the whitelist will be deleted in 3 seconds, and will be followed with a server restart", 2, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "Everything from the whitelist will be deleted in 3 seconds, and will be followed with a server restart", function(callback) MMNotification(ply, callback, 2, 3) end )
 
 			if sql.TableExists( "MetroWhitelistJob" ) then
 				sql.Query([[
@@ -136,7 +142,8 @@ hook.Add( "PlayerSay", "Metro::WhitelistHook::PlayerSay", function( ply, text )
 			end)
 
 		else
-			MMNotification(ply, "You don't have access to this command !", 1, 3)
+			--MMNotification(ply, "You don't have access to this command !", 1, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "You don't have access to this command !", function(callback) MMNotification(ply, callback, 1, 3) end )
 		end
 	end
 end)
@@ -168,7 +175,8 @@ net.Receive("Metro::WhitelistOrderToServer", function(len, ply)
 				net.WriteTable(whitelistTable)
 			net.Send(ply)
 		else
-			MMNotification(ply, "There is no job in the whitelist !", 1, 3)
+			--MMNotification(ply, "There is no job in the whitelist !", 1, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "There is no job in the whitelist !", function(callback) MMNotification(ply, callback, 1, 3) end )
 		end
 	elseif order == "addWhitelistPlayer" then -- trigger when we add a player to the whitelist
 		if not allowedPanel(ply) then return end
@@ -188,9 +196,12 @@ net.Receive("Metro::WhitelistOrderToServer", function(len, ply)
 		-- Add curent character to whitelist
 
 		local jobUID = sql.Query("SELECT JobUID FROM MetroWhitelistJob WHERE JobName = '"..teamName.."'")
-		local query = sql.Query("SELECT * FROM MetroWhitelistCharacters WHERE WhitelistSteamID = '"..playerEnt:SteamID64().."' AND WhitelistCharID = '"..tonumber(playerEnt:GetNWString("Metro::CharacterID")).."' AND WhitelistJobUID = '"..jobUID[1]["JobUID"].."'")
+		local query = sql.Query("SELECT * FROM MetroWhitelistCharacters WHERE WhitelistSteamID = '"..playerEnt:SteamID64().."' AND WhitelistCharID = '"..tonumber(playerEnt:GetNWInt("Metro::CharacterID")).."' AND WhitelistJobUID = '"..jobUID[1]["JobUID"].."'")
 		if query == nil then -- if character is not already whitelisted
-			sql.Query("INSERT INTO MetroWhitelistCharacters(WhitelistSteamID, WhitelistCharID, WhitelistJobUID) VALUES('"..playerEnt:SteamID64().."', "..tonumber(playerEnt:GetNWString("Metro::CharacterID"))..", "..tonumber(jobUID[1]["JobUID"])..")")
+			sql.Query("INSERT INTO MetroWhitelistCharacters(WhitelistSteamID, WhitelistCharID, WhitelistJobUID) VALUES('"..playerEnt:SteamID64().."', "..tonumber(playerEnt:GetNWInt("Metro::CharacterID"))..", "..tonumber(jobUID[1]["JobUID"])..")")
+			GNLib.AutoTranslate( MConf.LanguageType, "The player has been added to the whitelist !", function(callback) MMNotification(ply, callback, 0, 3) end )
+		else
+			GNLib.AutoTranslate( MConf.LanguageType, "This player is already whitelisted", function(callback) MMNotification(ply, callback, 1, 3) end )
 		end
 	elseif order == "addMultipleWhitelistPlayer" then -- trigger when we add MULTIPLE characters to whitelist
 		local playerName = net.ReadString()
@@ -227,14 +238,16 @@ net.Receive("Metro::WhitelistOrderToServer", function(len, ply)
 				net.WriteTable(sql.Query("SELECT JobName FROM MetroWhitelistJob WHERE JobActive = 1"))
 			net.Send(ply)
 		else
-			MMNotification(ply, "There is no job to delete !", 1, 3)
+			--MMNotification(ply, "There is no job to delete !", 1, 3)
+			GNLib.AutoTranslate( MConf.LanguageType, "There is no job to delete !", function(callback) MMNotification(ply, callback, 1, 3) end )
 		end
 	elseif order == "removeJobFromWhitelist" then -- trigger when we remove job from whitelist
 		if not allowedPanel(ply) then return end
 
 		local teamName = net.ReadString()
 		sql.Query("UPDATE MetroWhitelistJob SET JobActive = 0 WHERE JobName = '"..teamName.."'")
-		MMNotification(ply, "The job ('"..teamName.."') has been removed from the database !", 0, 3)
+		--MMNotification(ply, "The job ('"..teamName.."') has been removed from the database !", 0, 3)
+		GNLib.AutoTranslate( MConf.LanguageType, "The job has been removed from the database !", function(callback) MMNotification(ply, callback, 0, 3) end )
 
 		-- If there is still jobs in the list, reopening menu to let user delete other jobs
 		local whitelistTable = sql.Query("SELECT JobName FROM MetroWhitelistJob WHERE JobActive = 1")
